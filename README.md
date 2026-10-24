@@ -39,7 +39,7 @@ I iterated on this from a basic walkthrough to an interactive tool:
 | Version | Design inspiration | What changed |
 |---|---|---|
 | [**v3: RAG Playground** (latest)](https://indhu-natarajan.github.io/my_rag_simulator/rag-simulator-stripe.html) | Stripe | Fully interactive: editable knowledge base, chunk-size slider, own questions, top-K, prompt view, "I don't know" handling |
-| [v2](https://indhu-natarajan.github.io/my_rag_simulator/rag-simulator-google-studio.html) | — | Second iteration |
+| [v2](https://indhu-natarajan.github.io/my_rag_simulator/rag-simulator-google-studio.html) | Google Studio | Same walkthrough as v1, trying a different design |
 | [v1](https://indhu-natarajan.github.io/my_rag_simulator/rag-simulator.html) | Apple | Step-by-step walkthrough with Back / Next |
 
 Each version is a single HTML file (HTML, CSS and JavaScript), built with AI assistance.
