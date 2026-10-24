@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RAG Assembly Guide</title>
+<style>
+:root{
+  --blue:#0058a3; --blue-dark:#004181; --yellow:#ffdb00; --ink:#111; --muted:#555;
+  --line:#dfdfdf; --soft:#f5f5f5; --paper:#fff; --green:#0a8a00; --red:#cc0008;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--soft);color:var(--ink);font:15px/1.5 "Noto Sans","Helvetica Neue",Arial,sans-serif;display:flex;flex-direction:column}
+button{font:inherit;cursor:pointer}
+/* header */
+header{background:var(--blue);color:#fff;flex:none}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 20px;max-width:1400px;margin:auto;width:100%}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{background:var(--yellow);color:var(--blue);font-weight:900;font-size:18px;padding:4px 10px;border-radius:3px;letter-spacing:.02em}
+.brand h1{margin:0;font-size:18px;font-weight:700}
+.brand span{font-size:13px;opacity:.85;display:block;font-weight:400}
+.actions{display:flex;gap:8px}
+.btn{border:0;border-radius:999px;padding:9px 18px;font-weight:700;font-size:14px}
+.btn.primary{background:var(--yellow);color:var(--ink)}
+.btn.primary:hover{background:#ffe54d}
+.btn.ghost{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.6)}
+.btn.ghost:hover{border-color:#fff}
+.btn.dark{background:var(--ink);color:#fff}
+.btn.light{background:#e9e9e9;color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+/* stepper */
+.stepper{flex:none;background:#fff;border-bottom:1px solid var(--line)}
+.steps{display:grid;grid-template-columns:repeat(5,1fr);max-width:1400px;margin:auto;padding:0 20px}
+.step{background:none;border:0;border-bottom:4px solid transparent;padding:12px 8px 10px;display:flex;align-items:center;gap:10px;text-align:left;color:var(--muted)}
+.step:hover{background:#fafafa}
+.step .n{flex:none;width:30px;height:30px;border-radius:50%;border:2px solid currentColor;display:grid;place-items:center;font-weight:800;font-size:14px}
+.step b{display:block;color:var(--ink);font-size:14px}
+.step small{font-size:12px}
+.step.active{border-bottom-color:var(--blue);color:var(--blue)}
+.step.active .n{background:var(--blue);color:#fff;border-color:var(--blue)}
+.step.done .n{background:var(--yellow);border-color:var(--yellow);color:var(--ink)}
+/* workspace */
+main{flex:1;min-height:0;max-width:1400px;width:100%;margin:auto;padding:16px 20px 20px;display:grid;grid-template-columns:minmax(320px,.85fr) 1.15fr;gap:16px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:6px;display:flex;flex-direction:column;min-height:0}
+.phead{padding:16px 20px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+.big{flex:none;width:44px;height:44px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:22px;font-weight:800}
+.phead h2{margin:0;font-size:19px}
+.phead p{margin:0;color:var(--muted);font-size:13px}
+.pbody{padding:16px 20px;overflow:auto;flex:1;min-height:0}
+.pfoot{padding:12px 20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:16px 0 6px}
+.label:first-child{margin-top:0}
+.explain{background:#fffbe0;border-left:4px solid var(--yellow);padding:10px 12px;font-size:14px;margin-bottom:14px}
+.pm{background:#eaf3fb;border-left:4px solid var(--blue);padding:10px 12px;font-size:13px;margin-top:14px}
+textarea,input[type=text],select{width:100%;font:inherit;font-size:14px;border:1px solid #bbb;border-radius:4px;padding:10px;background:#fff;color:var(--ink)}
+textarea{min-height:230px;resize:vertical;line-height:1.5}
+textarea:focus,input:focus,select:focus{outline:3px solid #a7c7e7;border-color:var(--blue)}
+.row{display:flex;gap:10px;align-items:center}
+.row > *{flex:1}
+input[type=range]{width:100%;accent-color:var(--blue)}
+.val{font-weight:700;color:var(--blue)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{border:1px solid #bbb;background:#fff;border-radius:999px;padding:4px 10px;font-size:13px}
+.chip:hover{border-color:var(--blue);color:var(--blue)}
+.chip.out{border-style:dashed}
+/* status strip */
+.status{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stat{background:var(--soft);border-radius:4px;padding:8px 10px}
+.stat b{display:block;font-size:20px;line-height:1.1}
+.stat span{font-size:12px;color:var(--muted)}
+/* workbench */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.card{border:1px solid var(--line);border-left:6px solid var(--c,#999);border-radius:4px;padding:10px;font-size:13px;background:#fff;transition:opacity .2s,box-shadow .2s}
+.card .t{display:flex;justify-content:space-between;gap:6px;font-weight:700;font-size:12px}
+.card .t i{font-style:normal;color:var(--muted);font-weight:400}
+.card p{margin:6px 0 0;color:#333}
+.card.pick{box-shadow:0 0 0 3px var(--yellow)}
+.card.dim{opacity:.35}
+.card.sel{box-shadow:0 0 0 3px var(--blue)}
+.vec{display:flex;gap:2px;align-items:flex-end;height:36px;margin-top:8px}
+.vec i{flex:1;background:var(--c,#999);border-radius:1px;min-height:2px}
+.rank{display:grid;gap:8px}
+.ritem{display:grid;grid-template-columns:28px 1fr 120px;gap:10px;align-items:center;border:1px solid var(--line);border-radius:4px;padding:8px 10px;background:#fff}
+.ritem.pick{border-color:var(--blue);background:#f2f8fd}
+.ritem.below{opacity:.45}
+.ritem .pos{font-weight:800;text-align:center}
+.ritem .txt{font-size:13px}
+.ritem .txt b{display:block;font-size:12px}
+.meter{height:8px;background:#e6e6e6;border-radius:99px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--blue)}
+.score{font-size:12px;text-align:right;margin-top:3px}
+.prompt{background:#111;color:#eee;border-radius:4px;padding:14px;font:12.5px/1.55 ui-monospace,Menlo,monospace;white-space:pre-wrap}
+.prompt .ctx{background:#3a3200;color:var(--yellow)}
+.prompt .q{color:#7fc1ff}
+.answer{border:2px solid var(--green);border-radius:6px;padding:16px;background:#f3fbf2}
+.answer.unknown{border-color:var(--red);background:#fff4f4}
+.answer h3{margin:0 0 8px;font-size:16px}
+.cite{display:inline-block;background:var(--yellow);font-size:11px;font-weight:800;padding:1px 6px;border-radius:3px;margin-left:4px;vertical-align:1px}
+.sources{margin-top:14px;font-size:13px}
+.sources div{border-top:1px solid var(--line);padding:8px 0}
+.empty{color:var(--muted);background:var(--soft);border-radius:4px;padding:16px;text-align:center}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;margin-bottom:10px;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c);margin-right:5px;vertical-align:-1px}
+.running .step:not(.active){pointer-events:none}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:8px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+@media (max-width:900px){
+  body{display:block}
+  main{grid-template-columns:1fr}
+  .pbody{overflow:visible}
+  .steps{grid-template-columns:repeat(5,minmax(64px,1fr));padding:0 8px}
+  .step{flex-direction:column;gap:4px;text-align:center;padding:10px 2px}
+  .step small{display:none}
+  .step b{font-size:12px}
+  .bar{flex-wrap:wrap}
+  .status{grid-template-columns:1fr 1fr}
+  .ritem{grid-template-columns:24px 1fr;}
+  .ritem .m{grid-column:2}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand"><div class="logo">RAG</div><div><h1>RAG Assembly Guide</h1><span>Build a help-centre answer in 5 steps</span></div></div>
+    <div class="actions"><button id="run" class="btn primary">▶ Run full pipeline</button><button id="reset" class="btn ghost">Reset</button></div>
+  </div>
+</header>
+
+<nav class="stepper" aria-label="Pipeline steps"><div class="steps" id="steps"></div></nav>
+
+<main>
+  <section class="panel" aria-label="Instructions and controls">
+    <div class="phead"><div class="big" id="bigNum">1</div><div><h2 id="stepTitle"></h2><p id="stepSub"></p></div></div>
+    <div class="pbody" id="left"></div>
+    <div class="pfoot"><button id="back" class="btn light">← Back</button><span id="pos" style="font-size:13px;color:var(--muted)"></span><button id="next" class="btn dark">Next step →</button></div>
+  </section>
+  <section class="panel" aria-label="Workbench">
+    <div class="phead" style="padding:12px 20px"><div style="flex:1"><h2 id="benchTitle" style="font-size:16px"></h2><p id="benchSub"></p></div></div>
+    <div class="pbody">
+      <div class="status">
+        <div class="stat"><b id="sArt">0</b><span>articles</span></div>
+        <div class="stat"><b id="sChunks">0</b><span>chunks</span></div>
+        <div class="stat"><b id="sTop">–</b><span>best match</span></div>
+        <div class="stat"><b id="sTok">–</b><span>words sent to AI</span></div>
+      </div>
+      <div id="bench"></div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+const SAMPLE=`## Booking appointments
+Customers can book an available appointment from the Book tab. A booking confirmation email is sent immediately. If no confirmation arrives, check the spam folder and confirm the email address is correct.
+
+## Rescheduling appointments
+Customers can reschedule from My bookings up to 24 hours before the appointment. Open the booking, choose Reschedule, then select a new available time. Rescheduling less than 24 hours before an appointment may be restricted by the business cancellation policy.
+
+## Deposits and payments
+Some businesses require a deposit to confirm a booking. The deposit amount is shown before payment. Deposits are applied to the final appointment cost. A receipt is sent by email after a successful payment.
+
+## Refunds and cancellations
+Customers can cancel from My bookings. Refund eligibility depends on the business cancellation policy. If a refund is approved, it returns to the original payment method and can take 5 to 10 business days to appear.
+
+## Card on file
+Customers may save a card for faster payments. To update a saved card, go to Profile, Payment methods, then add a new card or remove an old one. Card details cannot be viewed after saving.`;
+
+const STEPS=[
+ {k:'Chunk',t:'Sort the parts',sub:'Split the help centre into small pieces',bench:'Your parts: chunks',benchSub:'Each coloured card is one searchable piece of an article.'},
+ {k:'Embed',t:'Label each part',sub:'Turn every chunk into numbers',bench:'Labelled parts: simplified embeddings',benchSub:'Each bar chart is a chunk’s numeric fingerprint. Click a card to compare it with your question.'},
+ {k:'Retrieve',t:'Find the right parts',sub:'Rank chunks against the question',bench:'Ranked parts: similarity search',benchSub:'Highlighted rows are sent to the AI. Faded rows are below the match threshold.'},
+ {k:'Augment',t:'Assemble the prompt',sub:'Put the question and evidence together',bench:'Assembled prompt',benchSub:'Yellow text is retrieved evidence; blue text is the customer’s question.'},
+ {k:'Generate',t:'Check the finished answer',sub:'A grounded answer with citations',bench:'Finished answer',benchSub:'Built only from the retrieved evidence, with the sources shown.'}
+];
+const COLORS=['#0058a3','#e08a00','#0a8a00','#b0005a','#5a4bd1','#007a7a','#8a5a00','#444'];
+const STOP=new Set('a an the is are am was be to of in on for and or can i my me do does did you your it its this that with from about what how when where which who why may up after before then at as by if will would should could there their they we our us any not no get got has have had into than so just only'.split(' '));
+const SYN={move:'reschedul',change:'reschedul',another:'reschedul',shift:'reschedul',later:'reschedul',date:'reschedul',day:'reschedul',
+ money:'refund',back:'refund',return:'refund',repay:'refund',reimburs:'refund',
+ cancel:'cancel',cancellation:'cancel',
+ credit:'card',debit:'card',save:'card',saved:'card',
+ pay:'payment',paid:'payment',charge:'payment',charged:'payment',
+ mail:'email',inbox:'email',receipt:'email',
+ confirm:'confirm',confirmation:'confirm',
+ book:'book',booking:'book',appointment:'appoint',appointments:'appoint',
+ long:'day',time:'day',days:'day'};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function stem(w){if(SYN[w])return SYN[w];let s=w.replace(/(ing|ed|es|s)$/,'');if(s.length<3)s=w;return SYN[s]||s}
+function tokens(t){return t.toLowerCase().replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(w=>w&&!STOP.has(w)).map(stem)}
+const DIM=16;
+function hash(w){let h=7;for(const c of w)h=(h*31+c.charCodeAt(0))>>>0;return h}
+function embed(t){const v=new Array(DIM).fill(0);for(const w of tokens(t)){v[hash(w)%DIM]+=1}const n=Math.hypot(...v)||1;return v.map(x=>x/n)}
+function bag(t){const m=new Map();for(const w of tokens(t))m.set(w,(m.get(w)||0)+1);return m}
+function cosine(a,b){let d=0,na=0,nb=0;for(const[k,v]of a){na+=v*v;if(b.has(k))d+=v*b.get(k)}for(const v of b.values())nb+=v*v;return na&&nb?d/Math.sqrt(na*nb):0}
+
+const S={step:0,kb:SAMPLE,size:25,overlap:10,q:'Can I move my booking to another day?',k:2,min:0.12,chunks:[],ranked:[],picked:[],sel:null,running:false};
+
+function build(){
+  const arts=S.kb.trim().split(/\n\s*\n/).map(a=>a.trim()).filter(Boolean);
+  S.arts=arts.map((a,i)=>{const l=a.split('\n');const title=l[0].startsWith('##')?l[0].replace(/^##\s*/,''):'Article '+(i+1);const body=(l[0].startsWith('##')?l.slice(1):l).join(' ');return{title,body,c:COLORS[i%COLORS.length]}});
+  S.chunks=[];const step=Math.max(5,Math.round(S.size*(1-S.overlap/100)));
+  S.arts.forEach(a=>{const w=a.body.split(/\s+/).filter(Boolean);for(let i=0;i<w.length;i+=step){S.chunks.push({id:S.chunks.length+1,title:a.title,c:a.c,text:w.slice(i,i+S.size).join(' ')});if(i+S.size>=w.length)break}});
+  S.chunks.forEach(c=>{c.vec=embed(c.title+' '+c.text);c.bag=bag(c.title+' '+c.text)});
+  retrieve();
+}
+function retrieve(){
+  const qb=bag(S.q);
+  S.qvec=embed(S.q);
+  S.ranked=S.chunks.map(c=>({...c,score:S.q.trim()?cosine(qb,c.bag):0})).sort((a,b)=>b.score-a.score);
+  S.picked=S.ranked.filter(c=>c.score>=S.min).slice(0,S.k);
+  render();
+}
+function answer(){
+  if(!S.q.trim())return null;
+  if(!S.picked.length)return{unknown:true};
+  const qb=bag(S.q);let sents=[];
+  S.picked.forEach(c=>{c.text.split(/(?<=[.!?])\s+/).forEach(s=>{if(s.split(' ').length>3)sents.push({s,id:c.id,sc:cosine(qb,bag(s))})})});
+  sents=sents.filter(x=>x.sc>0).sort((a,b)=>b.sc-a.sc).slice(0,2);
+  if(!sents.length)return{unknown:true};
+  return{parts:sents};
+}
+function promptText(){
+  const ctx=S.picked.length?S.picked.map(c=>`[Chunk ${c.id} · ${c.title}]\n${c.text}`).join('\n\n'):'(no relevant evidence found)';
+  return{ctx,words:(ctx+' '+S.q).split(/\s+/).length};
+}
+
+/* ---------- rendering ---------- */
+function renderSteps(){
+  $('steps').innerHTML=STEPS.map((s,i)=>`<button class="step ${i===S.step?'active':''} ${i<S.step?'done':''}" data-i="${i}" aria-current="${i===S.step?'step':'false'}"><span class="n">${i<S.step?'✓':i+1}</span><span><b>${s.t}</b><small>${s.k}</small></span></button>`).join('');
+  document.querySelectorAll('.step').forEach(b=>b.onclick=()=>{if(!S.running)go(+b.dataset.i)});
+}
+function renderLeft(){
+  const s=STEPS[S.step];$('bigNum').textContent=S.step+1;$('stepTitle').textContent=`Step ${S.step+1}: ${s.t}`;$('stepSub').textContent=s.sub+' ('+s.k+')';
+  $('pos').textContent=`${S.step+1} of 5`;$('back').disabled=S.step===0;$('next').textContent=S.step===4?'Start over ↺':'Next step →';
+  let h='';
+  if(S.step===0){h=`<div class="explain">An AI can't read the whole help centre for every question. So we cut it into small <b>chunks</b>, like sorting furniture parts before you build.</div>
+   <div class="label">Help-centre articles <span style="text-transform:none;font-weight:400">(start each with ##)</span></div>
+   <textarea id="kb" aria-label="Knowledge base">${esc(S.kb)}</textarea>
+   <div class="label">Chunk size: <span class="val" id="sizeV">${S.size} words</span></div>
+   <input type="range" id="size" min="15" max="120" step="5" value="${S.size}" aria-label="Chunk size">
+   <div class="label">Overlap between chunks: <span class="val" id="ovV">${S.overlap}%</span></div>
+   <input type="range" id="ov" min="0" max="40" step="5" value="${S.overlap}" aria-label="Overlap">
+   <div class="pm"><b>PM takeaway:</b> small chunks are precise but lose context; big chunks keep context but bring in noise. Overlap stops an answer being cut in half.</div>`}
+  if(S.step===1){h=`<div class="explain">Each chunk gets a <b>label made of numbers</b> (an embedding). Chunks about similar things get similar numbers, so the computer can compare meaning, not just exact words.</div>
+   <div class="label">Your question (also turned into numbers)</div>${qInput()}
+   <div class="label">Question fingerprint</div><div class="card" style="--c:#111"><div class="vec">${bars(S.qvec,'#111')}</div></div>
+   <p style="font-size:13px;color:var(--muted)">Click any chunk on the right to see how close its fingerprint is to your question.</p>
+   ${S.sel?selInfo():''}
+   <div class="pm"><b>PM takeaway:</b> real embeddings have hundreds of numbers made by an AI model. Here they're <b>simplified</b> to 16 so you can see them.</div>`}
+  if(S.step===2){h=`<div class="explain">The question's numbers are compared with every chunk's numbers. The closest chunks win, like finding the parts that match the picture in the manual.</div>
+   <div class="label">Customer question</div>${qInput()}${chips()}
+   <div class="label">How many chunks to send (top-K)</div>
+   <select id="k">${[1,2,3,4,5].map(n=>`<option ${n===S.k?'selected':''}>${n}</option>`).join('')}</select>
+   <div class="label">Minimum match: <span class="val" id="minV">${Math.round(S.min*100)}%</span></div>
+   <input type="range" id="min" min="0" max="0.5" step="0.02" value="${S.min}" aria-label="Minimum match">
+   <div class="pm"><b>PM takeaway:</b> more chunks gives more context but costs more and can confuse the answer. The minimum match is what lets the assistant say "I don't know".</div>`}
+  if(S.step===3){h=`<div class="explain">Now we <b>assemble</b> the prompt: instructions + the retrieved evidence + the customer's question. The AI only sees what is in this box.</div>
+   <div class="label">Customer question</div>${qInput()}${chips()}
+   <div class="label">Rules given to the AI</div>
+   <ul style="margin:0;padding-left:18px;font-size:14px"><li>Answer only from the evidence.</li><li>Cite the chunk numbers used.</li><li>If the evidence doesn't answer it, say "I don't know".</li></ul>
+   <div class="pm"><b>PM takeaway:</b> this step is where you control tone, safety and honesty. Good instructions here prevent made-up answers.</div>`}
+  if(S.step===4){const a=answer();h=`<div class="explain">The AI writes an answer <b>grounded</b> in the evidence and shows where it came from. If nothing relevant was found, it refuses to guess.</div>
+   <div class="label">Try another question</div>${qInput()}${chips()}
+   <div class="label">Quality check</div>
+   <ul style="margin:0;padding-left:18px;font-size:14px">
+   <li>Evidence found: <b>${S.picked.length?'Yes, '+S.picked.length+' chunk(s)':'No'}</b></li>
+   <li>Best match: <b>${S.ranked[0]&&S.q.trim()?Math.round(S.ranked[0].score*100)+'%':'–'}</b></li>
+   <li>Answer type: <b>${!a?'–':a.unknown?'Honest "I don’t know"':'Grounded with citations'}</b></li></ul>
+   <div class="pm"><b>PM takeaway:</b> measure answer quality with real questions: was the right chunk found, was the answer correct, and did it refuse when it should?</div>`}
+  $('left').innerHTML=h;bindLeft();
+}
+function qInput(){return`<div class="row"><input type="text" id="q" value="${esc(S.q)}" aria-label="Question"><button class="btn dark" id="ask" style="flex:none">Ask</button></div>`}
+function chips(){const qs=[['How long does a refund take?',0],['Can I move my booking to another day?',0],['How do I change my saved card?',0],['Is a deposit refunded?',0],['Do you offer student discounts?',1]];return`<div class="chips">${qs.map(([q,o])=>`<button class="chip ${o?'out':''}" data-q="${esc(q)}" title="${o?'Not covered by the articles':''}">${esc(q)}</button>`).join('')}</div>`}
+function bars(v,c){const m=Math.max(...v,0.01);return v.map(x=>`<i style="height:${Math.max(4,x/m*100)}%;background:${c}"></i>`).join('')}
+function selInfo(){const c=S.chunks.find(x=>x.id===S.sel);if(!c)return'';const r=S.ranked.find(x=>x.id===c.id);return`<div class="card sel" style="--c:${c.c}"><div class="t">Chunk ${c.id} · ${esc(c.title)}<i>${Math.round((r?r.score:0)*100)}% match</i></div><div class="vec">${bars(c.vec,c.c)}</div></div>`}
+function bindLeft(){
+  const on=(id,ev,fn)=>{const e=$(id);if(e)e[ev]=fn};
+  on('kb','oninput',e=>{S.kb=e.target.value;quiet(build)});
+  on('size','oninput',e=>{S.size=+e.target.value;$('sizeV').textContent=S.size+' words';quiet(build)});
+  on('ov','oninput',e=>{S.overlap=+e.target.value;$('ovV').textContent=S.overlap+'%';quiet(build)});
+  on('k','onchange',e=>{S.k=+e.target.value;quiet(retrieve)});
+  on('min','oninput',e=>{S.min=+e.target.value;$('minV').textContent=Math.round(S.min*100)+'%';quiet(retrieve)});
+  on('ask','onclick',()=>{S.q=$('q').value;retrieve();renderLeft()});
+  on('q','onkeydown',e=>{if(e.key==='Enter'){S.q=e.target.value;retrieve();renderLeft()}});
+  document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{S.q=b.dataset.q;retrieve();renderLeft()});
+}
+function renderBench(){
+  const s=STEPS[S.step];$('benchTitle').textContent=s.bench;$('benchSub').textContent=s.benchSub;
+  $('sArt').textContent=S.arts.length;$('sChunks').textContent=S.chunks.length;
+  $('sTop').textContent=S.q.trim()&&S.ranked[0]?Math.round(S.ranked[0].score*100)+'%':'–';
+  $('sTok').textContent=S.step>=3?promptText().words:'–';
+  const legend=`<div class="legend">${S.arts.map(a=>`<span style="--c:${a.c}">${esc(a.title)}</span>`).join('')}</div>`;
+  const pickIds=new Set(S.picked.map(c=>c.id));let h='';
+  if(S.step===0){h=legend+`<div class="cards">${S.chunks.map(c=>`<div class="card" style="--c:${c.c}"><div class="t">Chunk ${c.id}<i>${c.text.split(' ').length} words</i></div><p>${esc(c.text)}</p></div>`).join('')||'<div class="empty">Add some text to create chunks.</div>'}</div>`}
+  if(S.step===1){h=legend+`<div class="cards">${S.chunks.map(c=>`<div class="card ${S.sel===c.id?'sel':''}" data-id="${c.id}" style="--c:${c.c};cursor:pointer"><div class="t">Chunk ${c.id}<i>${esc(c.title)}</i></div><div class="vec">${bars(c.vec,c.c)}</div><p style="font-size:12px;color:var(--muted)">${esc(c.text.slice(0,70))}…</p></div>`).join('')}</div>`}
+  if(S.step===2){h=S.q.trim()?`<div class="rank">${S.ranked.map((c,i)=>`<div class="ritem ${pickIds.has(c.id)?'pick':c.score<S.min?'below':''}"><div class="pos">${i+1}</div><div class="txt"><b style="color:${c.c}">Chunk ${c.id} · ${esc(c.title)}${pickIds.has(c.id)?' <span class="cite">SENT</span>':''}</b>${esc(c.text.slice(0,110))}${c.text.length>110?'…':''}</div><div class="m"><div class="meter"><i style="width:${Math.round(c.score*100)}%"></i></div><div class="score">${Math.round(c.score*100)}% match</div></div></div>`).join('')}</div>`:'<div class="empty">Type a question to rank the chunks.</div>'}
+  if(S.step===3){const p=promptText();h=`<div class="prompt">SYSTEM:
+Answer the customer using ONLY the evidence below.
+Cite chunk numbers. If the evidence does not answer the
+question, reply: "I don't know based on our help centre."
+
+EVIDENCE:
+<span class="ctx">${esc(p.ctx)}</span>
+
+CUSTOMER QUESTION:
+<span class="q">${esc(S.q||'(no question yet)')}</span></div>`}
+  if(S.step===4){const a=answer();
+    if(!a)h='<div class="empty">Ask a question to get an answer.</div>';
+    else if(a.unknown)h=`<div class="answer unknown"><h3>I don't know based on our help centre.</h3><p style="margin:0">None of the articles matched this question well enough (best match ${S.ranked[0]?Math.round(S.ranked[0].score*100):0}%, minimum ${Math.round(S.min*100)}%). Instead of guessing, the assistant suggests contacting the business directly.</p></div>`;
+    else h=`<div class="answer"><h3>Answer</h3><p style="margin:0">${a.parts.map(p=>esc(p.s)+`<span class="cite">Chunk ${p.id}</span>`).join(' ')}</p></div>
+      <div class="sources"><div class="label">Sources used</div>${S.picked.map(c=>`<div><b style="color:${c.c}">Chunk ${c.id} · ${esc(c.title)}</b> (${Math.round(c.score*100)}% match)<br>${esc(c.text)}</div>`).join('')}</div>`;
+    h+=`<p style="font-size:12px;color:var(--muted);margin-top:14px">Simulation: the answer is assembled from the best-matching sentences in your browser. No real AI model is called.</p>`}
+  $('bench').innerHTML=h;
+  document.querySelectorAll('#bench .card[data-id]').forEach(e=>e.onclick=()=>{S.sel=+e.dataset.id;render()});
+}
+function render(){renderSteps();if(!S.keep)renderLeft();renderBench()}
+function quiet(fn){S.keep=true;fn();S.keep=false}
+function go(i){S.step=Math.max(0,Math.min(4,i));render()}
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove('show'),1400)}
+async function runAll(){
+  if(S.running)return;S.running=true;document.body.classList.add('running');$('run').disabled=true;
+  if(!S.q.trim())S.q='Can I move my booking to another day?';retrieve();
+  for(let i=0;i<5;i++){go(i);toast(`Step ${i+1}: ${STEPS[i].t}`);await new Promise(r=>setTimeout(r,1300))}
+  S.running=false;document.body.classList.remove('running');$('run').disabled=false;toast('Pipeline complete ✓');
+}
+$('back').onclick=()=>go(S.step-1);
+$('next').onclick=()=>go(S.step===4?0:S.step+1);
+$('run').onclick=runAll;
+$('reset').onclick=()=>{Object.assign(S,{step:0,kb:SAMPLE,size:25,overlap:10,q:'Can I move my booking to another day?',k:2,min:0.12,sel:null});build();toast('Reset to sample')};
+build();
+</script>
+</body>
+</html>

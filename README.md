@@ -2,7 +2,7 @@
 
 An interactive, single-page simulator that shows step by step how **RAG (retrieval-augmented generation)** works, using a support assistant for an online booking and payments app.
 
-**▶ Try it:** https://indhu-natarajan.github.io/my_rag_simulator/rag-simulator-stripe.html
+**▶ Try it:** https://indhu-natarajan.github.io/my_rag_simulator/rag-simulator-ikea.html
 
 Built by Indhu Natarajan as part of the HelloPM AI Product Management program.
 
@@ -14,10 +14,12 @@ Many AI products answer questions from a company's own documents. As a product m
 
 ## What you can do
 
+Click any of the 5 steps, use Back / Next, or press **Run full pipeline** to watch every step in order.
+
 1. **Edit the knowledge base:** change the help-centre articles or paste your own text.
-2. **Chunk it:** move the chunk-size slider and see how the text is split into searchable pieces.
+2. **Chunk it:** move the chunk-size and overlap sliders and see how the text is split into searchable pieces.
 3. **See embeddings:** each chunk gets a (simplified) numeric representation.
-4. **Ask a question:** type a customer question, choose how many chunks to retrieve, and see the match scores.
+4. **Ask a question:** type a customer question or pick a sample, choose how many chunks to retrieve and the minimum match, and see the scores.
 5. **See the prompt:** the retrieved chunks are inserted into the final prompt sent to the AI model.
 6. **Get a grounded answer:** the answer cites the chunk it came from, and if the articles don't cover the question, the assistant says it doesn't know instead of guessing.
 
@@ -38,7 +40,8 @@ I iterated on this from a basic walkthrough to an interactive tool:
 
 | Version | Design inspiration | What changed |
 |---|---|---|
-| [**v3: RAG Playground** (latest)](https://indhu-natarajan.github.io/my_rag_simulator/rag-simulator-stripe.html) | Stripe | Fully interactive: editable knowledge base, chunk-size slider, own questions, top-K, prompt view, "I don't know" handling |
+| [**v4: RAG Assembly Guide** (latest)](https://indhu-natarajan.github.io/my_rag_simulator/rag-simulator-ikea.html) | IKEA-style instructions | Clickable 5-step stepper, "Run full pipeline", side-by-side controls and results on one screen, chunk overlap, minimum-match threshold, answers built from retrieved sentences with citations |
+| [v3: RAG Playground](https://indhu-natarajan.github.io/my_rag_simulator/rag-simulator-stripe.html) | Stripe | Fully interactive: editable knowledge base, chunk-size slider, own questions, top-K, prompt view, "I don't know" handling |
 | [v2](https://indhu-natarajan.github.io/my_rag_simulator/rag-simulator-google-studio.html) | Google Studio | Same walkthrough as v1, trying a different design |
 | [v1](https://indhu-natarajan.github.io/my_rag_simulator/rag-simulator.html) | Apple | Step-by-step walkthrough with Back / Next |
 
